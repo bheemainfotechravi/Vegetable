@@ -1,12 +1,14 @@
 import React from 'react'
 import Navbar from '../components/Navbar'
-import { Hero } from '../components/Hero'
+import { CartSection } from '../components/CartSection'
+import OfferSection from '../components/OfferSection'
 
 const Home = () => {
   return (
 <>
 <Navbar/>
-<Hero/>
+<CartSection/>
+<OfferSection/>
 </>
   )
 }
