@@ -16,34 +16,13 @@ const Navbar = () => {
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(0);
 
-  // ✅ Send OTP
-  const handleSendOtp = () => {
-    if (!name || !inputEmail) {
-      return alert("Enter name and email");
-    }
+  // ✅ Validation
+  const isStep1Valid = name.trim() !== "" && inputEmail.trim() !== "";
+  const isStep2Valid = otp.length === 6;
 
-    dispatch(sendOtp({ name, email: inputEmail }));
-  };
-
-  // ✅ Verify OTP
-  const handleVerifyOtp = async () => {
-    if (!otp) return alert("Enter OTP");
-
-    const res = await dispatch(verifyOtp({ email, otp }));
-
-    if (res.meta.requestStatus === "fulfilled") {
-      setShowModal(false);
-    }
-  };
-
-  // ✅ Resend OTP (with 60 sec timer)
-  const handleResendOtp = () => {
-    if (timer > 0) return;
-
-    dispatch(resendOtp({ email }));
-
+  // ✅ Start Timer
+  const startTimer = () => {
     setTimer(60);
-
     const interval = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
@@ -55,10 +34,49 @@ const Navbar = () => {
     }, 1000);
   };
 
-  // ✅ Reset timer when modal closes
+  // ✅ Send OTP
+  const handleSendOtp = async () => {
+    if (!isStep1Valid) return;
+
+    const res = await dispatch(sendOtp({ name, email: inputEmail }));
+
+    if (res.meta.requestStatus === "fulfilled") {
+      startTimer(); // 🔥 timer starts after OTP sent
+    }
+  };
+
+  // ✅ Verify OTP
+  const handleVerifyOtp = async () => {
+    if (!isStep2Valid) return;
+
+    const res = await dispatch(verifyOtp({ email, otp }));
+
+    if (res.meta.requestStatus === "fulfilled") {
+      setShowModal(false);
+      setOtp("");
+      setName("");
+      setInputEmail("");
+    }
+  };
+
+  // ✅ Resend OTP
+  const handleResendOtp = async () => {
+    if (timer > 0) return;
+
+    const res = await dispatch(resendOtp({ email }));
+
+    if (res.meta.requestStatus === "fulfilled") {
+      startTimer();
+    }
+  };
+
+  // ✅ Reset when modal closes
   useEffect(() => {
     if (!showModal) {
       setTimer(0);
+      setOtp("");
+      setName("");
+      setInputEmail("");
     }
   }, [showModal]);
 
@@ -169,7 +187,18 @@ const Navbar = () => {
               {/* Button */}
               <button
                 onClick={step === 1 ? handleSendOtp : handleVerifyOtp}
-                className="mt-6 bg-white text-pink-600 py-2.5 rounded-xl font-semibold"
+                disabled={
+                  step === 1 ? !isStep1Valid || loading : !isStep2Valid || loading
+                }
+                className={`mt-6 py-2.5 rounded-xl font-semibold transition ${
+                  step === 1
+                    ? isStep1Valid
+                      ? "bg-white text-pink-600"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : isStep2Valid
+                    ? "bg-white text-pink-600"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
               >
                 {loading
                   ? "Please wait..."
@@ -221,7 +250,6 @@ const Navbar = () => {
                 Secure • Fast • Reliable
               </div>
             </div>
-
           </div>
         </div>
       )}
