@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { CiBookmark } from "react-icons/ci";
 
 const basketProducts = [
   {
@@ -79,6 +80,7 @@ const bestSellers = [
 const ProductCard = ({ item, selectedVariant, setSelectedVariant }) => {
   const variantIndex = selectedVariant[item.id] || 0;
   const variant = item.variants[variantIndex];
+  const [count, setCount] = useState(0);
 
   return (
     <div className="bg-white rounded-xl p-4 shadow hover:shadow-lg transition relative">
@@ -129,28 +131,41 @@ const ProductCard = ({ item, selectedVariant, setSelectedVariant }) => {
         </span>
       </div>
 
-      {/* Har Din Sasta
-      {item.discount >= 50 && (
-        <div className="bg-green-100 text-green-700 text-xs px-2 py-1 mt-2 rounded">
-          Har Din Sasta!
-        </div>
-      )} */}
-
       {/* Actions */}
       <div className="flex justify-between mt-4">
         <button className="border p-2 rounded hover:bg-gray-100">
-          🔖save
+          <CiBookmark />
         </button>
 
-        <button className="border border-red-500 text-red-500 px-5 py-1 rounded hover:bg-red-100">
-          Add 
-        </button>
+    
+        {count === 0 ? (
+          <button
+            onClick={() => setCount(1)}
+            className="border border-red-500 text-red-500 w-40 px-5 py-1 rounded hover:bg-red-700 hover:text-white"
+
+          >
+            Add
+          </button>
+        ) : (
+          <div className="flex items-center border border-red-500 rounded overflow-hidden">
+            <button
+              onClick={() => setCount(Math.max(0, count - 1))}
+              className="px-3 py-1 text-red-500 hover:bg-red-100"
+            > - </button>
+
+            <span className="px-3">{count}</span>
+
+            <button onClick={() => setCount(count + 1)}
+              className="px-3 py-1 text-red-500 hover:bg-red-100"
+            >+</button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-/* ---------------- MAIN COMPONENT ---------------- */
+/*  MAIN COMPONENT  */
 
 export const CartSection = () => {
   const [selectedVariant, setSelectedVariant] = useState({});
@@ -172,9 +187,7 @@ export const CartSection = () => {
 
       {/* My Smart Basket */}
       <div className="max-w-7xl mx-auto mb-12">
-        <h2 className="text-xl font-bold mb-6">
-          My Smart Basket
-        </h2>
+        <h2 className="text-xl font-bold mb-6">My Smart Basket</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {basketProducts.map((item) => (
