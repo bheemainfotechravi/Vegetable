@@ -133,7 +133,7 @@ const ProductCard = ({ item, selectedVariant, setSelectedVariant }) => {
 
       {/* Actions */}
       <div className="flex justify-between mt-4">
-        <button className="border p-2 rounded hover:bg-gray-100">
+        <button className="border p-2 rounded hover:bg-gray-300">
           <CiBookmark />
         </button>
 
