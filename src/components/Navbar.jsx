@@ -1,26 +1,67 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Search, ShoppingCart } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { sendOtp, verifyOtp, resendOtp } from "../features/authSlice";
+import { sendOtp, verifyOtp, resendOtp, logoutUser } from "../features/authSlice";
+import LoginModal from "./LoginModal";
+
 
 const Navbar = () => {
   const dispatch = useDispatch();
+  const dropdownRef = useRef();
 
-  const { step, loading, email, isAuthenticated, resendLoading } =
+  const { step, loading, email, isAuthenticated, resendLoading, user } =
     useSelector((state) => state.auth);
 
   const [location] = useState("Indore");
   const [showModal, setShowModal] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const [inputEmail, setInputEmail] = useState("");
   const [name, setName] = useState("");
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(0);
 
-  // ✅ Validation
+  // Validation
   const isStep1Valid = name.trim() !== "" && inputEmail.trim() !== "";
   const isStep2Valid = otp.length === 6;
 
-  // ✅ Start Timer
+
+
+const placeholders = [
+  "Tomato 🍅",
+  "Potato 🥔",
+  "Onion 🧅",
+  "Carrot 🥕",
+  "Spinach 🌿",
+  "Cabbage 🥬",
+];
+
+const [index, setIndex] = useState(0);
+
+// rotate text
+useEffect(() => {
+  const interval = setInterval(() => {
+    setIndex((prev) => (prev + 1) % placeholders.length);
+  }, 1500);
+
+  return () => clearInterval(interval);
+}, []);
+
+
+  
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Timer
   const startTimer = () => {
     setTimer(60);
     const interval = setInterval(() => {
@@ -34,18 +75,15 @@ const Navbar = () => {
     }, 1000);
   };
 
-  // ✅ Send OTP
+  // Send OTP
   const handleSendOtp = async () => {
     if (!isStep1Valid) return;
 
     const res = await dispatch(sendOtp({ name, email: inputEmail }));
-
-    if (res.meta.requestStatus === "fulfilled") {
-      startTimer(); // 🔥 timer starts after OTP sent
-    }
+    if (res.meta.requestStatus === "fulfilled") startTimer();
   };
 
-  // ✅ Verify OTP
+  // Verify OTP
   const handleVerifyOtp = async () => {
     if (!isStep2Valid) return;
 
@@ -59,18 +97,20 @@ const Navbar = () => {
     }
   };
 
-  // ✅ Resend OTP
+  // Resend OTP
   const handleResendOtp = async () => {
     if (timer > 0) return;
 
     const res = await dispatch(resendOtp({ email }));
-
-    if (res.meta.requestStatus === "fulfilled") {
-      startTimer();
-    }
+    if (res.meta.requestStatus === "fulfilled") startTimer();
   };
 
-  // ✅ Reset when modal closes
+  // Logout
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    setShowDropdown(false);
+  };
+
   useEffect(() => {
     if (!showModal) {
       setTimer(0);
@@ -84,40 +124,32 @@ const Navbar = () => {
     <>
       {/* Navbar */}
       <div className="w-full shadow-md border-b bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-5 h-[90px] flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5 h-[80px] flex items-center justify-between">
 
           {/* Left */}
-          <div className="flex items-center gap-6">
-            <h1 className="text-3xl font-bold cursor-pointer">logo</h1>
-            <span className="hidden sm:block text-base">{location}</span>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <h1 className="text-2xl sm:text-3xl font-bold cursor-pointer">logo</h1>
+            <span className="hidden sm:block text-sm">{location}</span>
           </div>
 
           {/* Search */}
-          <div className="flex-1 mx-6 hidden md:block">
-            <div className="flex items-center bg-white rounded-full px-5 py-3 shadow-md">
-              <Search className="text-gray-500 w-5 h-5" />
-              <input
-                type="text"
-                placeholder='Search for "products"'
-                className="bg-transparent outline-none px-3 w-full text-gray-700"
-              />
-            </div>
-          </div>
+          <div className="flex-1 mx-4 hidden md:block">
+      <div className="flex items-center bg-white rounded-full px-4 py-2 shadow-md">
+        <Search className="text-gray-500 w-5 h-5" />
+
+        <input
+          type="text"
+          placeholder={`Search for "${placeholders[index]}"`}
+          className="bg-transparent outline-none px-3 w-full text-gray-700 transition-all duration-300"
+        />
+      </div>
+    </div>
 
           {/* Right */}
-          <div className="flex items-center gap-6">
-            {!isAuthenticated ? (
-              <button
-                onClick={() => setShowModal(true)}
-                className="bg-white text-purple-600 px-5 py-2 rounded-full text-sm font-semibold shadow"
-              >
-                Signup / Login
-              </button>
-            ) : (
-              <div className="text-sm font-medium">Profile</div>
-            )}
+          <div className="flex items-center gap-4 sm:gap-6">
 
-            {/* Cart */}
+
+              {/* Cart */}
             <div className="relative flex items-center gap-2 cursor-pointer">
               <ShoppingCart className="w-6 h-6" />
               <span className="hidden sm:block">Cart</span>
@@ -125,134 +157,77 @@ const Navbar = () => {
                 2
               </span>
             </div>
+
+            {/* Login OR Avatar */}
+            {!isAuthenticated ? (
+              <button
+                onClick={() => setShowModal(true)}
+                className="bg-white text-purple-600 px-4 py-2 rounded-full text-sm font-semibold shadow"
+              >
+                Login
+              </button>
+            ) : (
+              <div className="relative" ref={dropdownRef}>
+
+                {/* Avatar */}
+                <div
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="w-10 h-10 rounded-full bg-white text-purple-600 flex items-center justify-center font-bold cursor-pointer"
+                >
+                  {user?.name
+                    ? user.name.charAt(0).toUpperCase()
+                    : "U"}
+                </div>
+
+                {/* Dropdown */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-3 w-44 bg-white text-black rounded-xl shadow-lg overflow-hidden">
+
+                    <div className="px-4 py-2 text-sm border-b font-medium">
+                      {user?.name || "User"}
+                    </div>
+
+                    <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">
+                      Profile
+                    </button>
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 hover:bg-red-100 text-red-500 text-sm"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+          
+
           </div>
         </div>
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-
-          <div className="bg-white rounded-2xl w-[800px] flex relative overflow-hidden shadow-2xl">
-
-            {/* Close */}
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-black text-lg"
-            >
-              ✕
-            </button>
-
-            {/* LEFT */}
-            <div className="w-1/2 bg-gradient-to-br from-purple-700 via-pink-500 to-purple-600 text-white p-10 flex flex-col justify-center">
-
-              <h1 className="text-3xl font-bold mb-2">YourLogo</h1>
-              <p className="text-sm opacity-90 mb-6">Quick login using OTP</p>
-
-              {/* Inputs */}
-              <div className="bg-white rounded-xl px-5 py-4 flex flex-col gap-5 shadow-md">
-
-                {step === 1 && (
-                  <>
-                    <input
-                      type="text"
-                      placeholder="Full Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="border rounded-lg px-3 py-2 text-black"
-                    />
-
-                    <input
-                      type="email"
-                      placeholder="Email Address"
-                      value={inputEmail}
-                      onChange={(e) => setInputEmail(e.target.value)}
-                      className="border rounded-lg px-3 py-2 text-black"
-                    />
-                  </>
-                )}
-
-                {step === 2 && (
-                  <input
-                    type="text"
-                    maxLength="6"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter 6-digit OTP"
-                    className="border rounded-lg px-3 py-2 text-center tracking-[6px] text-black"
-                  />
-                )}
-              </div>
-
-              {/* Button */}
-              <button
-                onClick={step === 1 ? handleSendOtp : handleVerifyOtp}
-                disabled={
-                  step === 1 ? !isStep1Valid || loading : !isStep2Valid || loading
-                }
-                className={`mt-6 py-2.5 rounded-xl font-semibold transition ${
-                  step === 1
-                    ? isStep1Valid
-                      ? "bg-white text-pink-600"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : isStep2Valid
-                    ? "bg-white text-pink-600"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-              >
-                {loading
-                  ? "Please wait..."
-                  : step === 1
-                  ? "Send OTP"
-                  : "Verify OTP"}
-              </button>
-
-              {/* Resend */}
-              {step === 2 && (
-                <p
-                  onClick={handleResendOtp}
-                  className={`text-xs mt-3 text-center ${
-                    timer > 0
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "underline cursor-pointer hover:text-pink-300"
-                  }`}
-                >
-                  {resendLoading
-                    ? "Sending..."
-                    : timer > 0
-                    ? `Resend in ${timer}s`
-                    : "Resend OTP"}
-                </p>
-              )}
-            </div>
-
-            {/* RIGHT */}
-            <div className="w-1/2 flex flex-col items-center justify-center p-10 bg-gray-50">
-              <h2 className="text-xl font-semibold mb-2">
-                Fast & Secure Login
-              </h2>
-
-              <p className="text-sm text-gray-500 mb-6 text-center">
-                Access your account instantly with OTP verification
-              </p>
-
-              <div className="w-full space-y-3">
-                <button className="bg-black text-white py-2.5 rounded-lg w-full">
-                  Download for Android
-                </button>
-
-                <button className="bg-black text-white py-2.5 rounded-lg w-full">
-                  Download for iOS
-                </button>
-              </div>
-
-              <div className="mt-6 text-gray-400 text-xs">
-                Secure • Fast • Reliable
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <LoginModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        step={step}
+        loading={loading}
+        resendLoading={resendLoading}
+        name={name}
+        setName={setName}
+        inputEmail={inputEmail}
+        setInputEmail={setInputEmail}
+        otp={otp}
+        setOtp={setOtp}
+        handleSendOtp={handleSendOtp}
+        handleVerifyOtp={handleVerifyOtp}
+        handleResendOtp={handleResendOtp}
+        isStep1Valid={isStep1Valid}
+        isStep2Valid={isStep2Valid}
+        timer={timer}
+      />
     </>
   );
 };

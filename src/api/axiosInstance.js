@@ -1,63 +1,40 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-    baseURL: "http://192.168.29.243:5000/api",
-    timeout: 10000,
-    headers: {
-        "Content-Type": "application/json",
-    },
-    withCredentials: true,
+  baseURL: "http://192.168.29.243:5000/api",
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true, // ✅ VERY IMPORTANT (for cookies)
 });
 
-// ✅ REQUEST INTERCEPTOR (ADD LOGS)
+// ================= REQUEST INTERCEPTOR =================
 axiosInstance.interceptors.request.use(
-    (config) => {
-        console.log("🚀 API REQUEST");
-        console.log("URL:", config.baseURL + config.url);
-        console.log("METHOD:", config.method);
-        console.log("DATA:", config.data);
-        console.log("HEADERS:", config.headers);
-        console.log("withCredentials:", config.withCredentials);
-        console.log("----------------------------");
-
-        return config;
-    },
-    (error) => {
-        console.log("❌ REQUEST ERROR:", error);
-        return Promise.reject(error);
-    }
+  (config) => {
+    // ❌ No token needed (cookie will be sent automatically)
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
-// ✅ RESPONSE INTERCEPTOR (DETAILED LOGS)
+// ================= RESPONSE INTERCEPTOR =================
 axiosInstance.interceptors.response.use(
-    (response) => {
-        console.log("✅ API RESPONSE");
-        console.log("DATA:", response.data);
-        console.log("STATUS:", response.status);
-        console.log("----------------------------");
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
 
-        return response;
-    },
-    (error) => {
-        console.log("❌ API ERROR FULL OBJECT:", error);
+    if (status === 401) {
+      console.log("Unauthorized - session expired or invalid");
 
-        if (error.response) {
-            // Server responded (4xx, 5xx)
-            console.log("🔴 STATUS:", error.response.status);
-            console.log("🔴 DATA:", error.response.data);
-        } else if (error.request) {
-            // Request sent but no response
-            console.log("🟡 NO RESPONSE FROM SERVER");
-            console.log(error.request);
-        } else {
-            // Something else
-            console.log("⚠️ ERROR MESSAGE:", error.message);
-        }
+      // ❌ don't reload page
+      // ❌ don't redirect here
 
-        console.log("----------------------------");
-
-        return Promise.reject(error);
+      // optional: you can handle logout globally later
     }
+
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;
