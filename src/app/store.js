@@ -1,28 +1,38 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import authReducer from "../features/authSlice";
 import vendorReducer from "../features/vendorSlice";
+import productReducer from "../features/productSlice"; // ✅ NEW
 
-import storage from "../api/storage"; // ✅ your custom storage
+
+import storage from "../api/storage";
 import { persistReducer, persistStore } from "redux-persist";
 
-// ✅ Auth persist config
+// ✅ Auth persist
 const authPersistConfig = {
   key: "auth",
   storage,
   whitelist: ["user", "isAuthenticated", "token"],
 };
 
-// ✅ Vendor persist config
+// ✅ Vendor persist
 const vendorPersistConfig = {
   key: "vendor",
   storage,
-  whitelist: ["vendor"], // 👈 important
+  whitelist: ["vendor"],
+};
+
+
+const productPersistConfig = {
+  key: "product",
+  storage,
+  whitelist: ["products"], 
 };
 
 // ✅ Combine reducers
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   vendor: persistReducer(vendorPersistConfig, vendorReducer),
+  product: persistReducer(productPersistConfig, productReducer), // ✅ NEW
 });
 
 // ✅ Store

@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { createProduct, resetProductState } from "../../features/productSlice";
+import { useDispatch } from "react-redux";
+import { updateProduct } from "../../features/productSlice";
 import { toast } from "react-toastify";
 
-const AddProductModal = ({ onClose, editData }) => {
+const EditProductModal = ({ onClose, product }) => {
   const dispatch = useDispatch();
-
-  const { loading, success, error } = useSelector(
-    (state) => state.product
-  );
 
   const [form, setForm] = useState({
     image: "",
@@ -20,15 +16,15 @@ const AddProductModal = ({ onClose, editData }) => {
 
   const [preview, setPreview] = useState("");
 
-  // ✅ Fill edit data
+  // ✅ Fill existing data
   useEffect(() => {
-    if (editData) {
-      setForm(editData);
-      setPreview(editData.image);
+    if (product) {
+      setForm(product);
+      setPreview(product.image);
     }
-  }, [editData]);
+  }, [product]);
 
-  // ✅ Cleanup preview URL (memory leak fix)
+  // ✅ Cleanup preview (memory fix)
   useEffect(() => {
     return () => {
       if (preview && typeof preview !== "string") {
@@ -37,19 +33,17 @@ const AddProductModal = ({ onClose, editData }) => {
     };
   }, [preview]);
 
-  // ✅ Handle inputs
+  // ✅ Input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ✅ Handle image upload
+  // ✅ Image change
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setForm({ ...form, image: file });
-
-      const imageURL = URL.createObjectURL(file);
-      setPreview(imageURL);
+      setPreview(URL.createObjectURL(file));
     }
   };
 
@@ -59,22 +53,16 @@ const AddProductModal = ({ onClose, editData }) => {
       ? Math.round(form.mrp - (form.mrp * form.discount) / 100)
       : 0;
 
-  // ✅ Submit
-  const handleSubmit = () => {
-    // 🔴 Validation
+  // ✅ UPDATE API CALL
+  const handleUpdate = async () => {
     if (!form.name || !form.mrp || !form.quantity) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-
-    if (!form.image && !editData) {
-      toast.error("Please select an image");
+      toast.error("Please fill all fields");
       return;
     }
 
     const formData = new FormData();
 
-    // ✅ Only send file if it's actually a file
+    // ✅ Only send image if new file selected
     if (typeof form.image !== "string") {
       formData.append("image", form.image);
     }
@@ -85,34 +73,32 @@ const AddProductModal = ({ onClose, editData }) => {
     formData.append("quantity", form.quantity);
     formData.append("finalPrice", finalPrice);
 
-    dispatch(createProduct(formData));
-  };
+    try {
+      await dispatch(
+        updateProduct({
+          id: product._id,
+          data: formData,
+        })
+      ).unwrap();
 
-  // ✅ Success / Error
-  useEffect(() => {
-    if (success) {
-      toast.success("Product Created Successfully");
-      dispatch(resetProductState());
+      toast.success("Product Updated Successfully");
       onClose();
+    } catch (err) {
+      toast.error(err || "Update failed");
     }
-
-    if (error) {
-      toast.error(error);
-      dispatch(resetProductState());
-    }
-  }, [success, error, dispatch, onClose]);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center p-4 z-50">
       <div className="bg-white w-full max-w-md rounded-xl p-5 shadow-lg">
 
         <h2 className="text-lg font-semibold mb-4 text-gray-800">
-          {editData ? "Edit Product" : "Add Product"}
+          Edit Product
         </h2>
 
         <div className="space-y-3">
 
-          {/* FILE INPUT */}
+          {/* Image */}
           <input
             type="file"
             accept="image/*"
@@ -120,41 +106,44 @@ const AddProductModal = ({ onClose, editData }) => {
             className="w-full p-2 border rounded-md text-sm"
           />
 
-          {/* PREVIEW */}
+          {/* Preview */}
           {preview && (
             <div className="flex justify-center">
               <img
                 src={preview}
                 alt="preview"
-                className="w-24 h-24 object-cover rounded-md border shadow-sm"
+                className="w-24 h-24 object-cover rounded-md border"
               />
             </div>
           )}
 
+          {/* Name */}
           <input
             type="text"
             name="name"
-            placeholder="Product Name"
             value={form.name}
             onChange={handleChange}
+            placeholder="Product Name"
             className="w-full p-2 border rounded-md text-sm"
           />
 
+          {/* MRP */}
           <input
             type="number"
             name="mrp"
-            placeholder="MRP"
             value={form.mrp}
             onChange={handleChange}
+            placeholder="MRP"
             className="w-full p-2 border rounded-md text-sm"
           />
 
+          {/* Discount */}
           <input
             type="number"
             name="discount"
-            placeholder="Discount (%)"
             value={form.discount}
             onChange={handleChange}
+            placeholder="Discount (%)"
             className="w-full p-2 border rounded-md text-sm"
           />
 
@@ -165,12 +154,13 @@ const AddProductModal = ({ onClose, editData }) => {
             className="w-full p-2 border rounded-md bg-gray-100 text-indigo-600 font-semibold"
           />
 
+          {/* Quantity */}
           <input
             type="number"
             name="quantity"
-            placeholder="Quantity"
             value={form.quantity}
             onChange={handleChange}
+            placeholder="Quantity"
             className="w-full p-2 border rounded-md text-sm"
           />
 
@@ -186,11 +176,10 @@ const AddProductModal = ({ onClose, editData }) => {
           </button>
 
           <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="px-4 py-2 bg-indigo-600 text-white rounded text-sm"
+            onClick={handleUpdate}
+            className="px-4 py-2 bg-green-600 text-white rounded text-sm"
           >
-            {loading ? "Uploading..." : "Save"}
+            Update
           </button>
         </div>
 
@@ -199,4 +188,4 @@ const AddProductModal = ({ onClose, editData }) => {
   );
 };
 
-export default AddProductModal;
+export default EditProductModal;

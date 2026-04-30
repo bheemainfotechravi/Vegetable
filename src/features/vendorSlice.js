@@ -29,6 +29,22 @@ export const loginVendor = createAsyncThunk(
   }
 );
 
+
+
+
+// ✅ LOGOUT
+export const logoutVendor = createAsyncThunk(
+  "vendor/logoutVendor",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.post("/vendor/logout");
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Logout failed");
+    }
+  }
+);
+
 const vendorSlice = createSlice({
   name: "vendor",
   initialState: {
@@ -76,13 +92,32 @@ const vendorSlice = createSlice({
         state.success = true;
 
         // ✅ Save vendor (token inside it if backend sends)
-        state.vendor = action.payload.vendor;
+        state.vendor = {
+          ...action.payload.vendor,
+          token: action.payload.token,
+        };
       })
       .addCase(loginVendor.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.success = false;
+      })
+
+
+      // ✅ LOGOUT
+      .addCase(logoutVendor.fulfilled, (state) => {
+        state.vendor = null;
+        state.success = false;
+        state.error = null;
+
+        // ✅ remove token
+        localStorage.removeItem("vendorToken");
       });
+
+
+
+
+
   },
 });
 
