@@ -4,7 +4,7 @@ import VendorSidebar from "../Vendor/VendorSidebar";
 import { toast } from "react-toastify";
 import { useNavigate, Outlet } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { resetVendorState } from "../../features/vendorSlice";
+import { logoutVendor } from "../../features/vendorSlice"; // ✅ use thunk, not resetVendorState
 
 const VendorDashboard = () => {
   const navigate = useNavigate();
@@ -14,22 +14,23 @@ const VendorDashboard = () => {
 
   useEffect(() => {
     if (!vendor) {
-      toast.error("Please login first");
+   
       setTimeout(() => navigate("/vendor/login"), 1500);
     }
-  }, [vendor]);
+  }, [vendor, navigate]);
 
-  const handleLogout = () => {
-    dispatch(resetVendorState());
+  const handleLogout = async () => {
+    // ✅ logoutVendor thunk clears Redux state + removes vendorToken from localStorage
+    await dispatch(logoutVendor());
     toast.success("Logged out successfully");
     setTimeout(() => navigate("/vendor/login"), 1500);
   };
 
   return (
     <div
-  className="min-h-screen"
-  style={{ backgroundColor: "oklch(96.2% 0.018 272.314)" }}
->
+      className="min-h-screen"
+      style={{ backgroundColor: "oklch(96.2% 0.018 272.314)" }}
+    >
       {/* Navbar */}
       <VendorNavbar onLogout={handleLogout} />
 

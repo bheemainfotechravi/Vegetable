@@ -29,9 +29,6 @@ export const loginVendor = createAsyncThunk(
   }
 );
 
-
-
-
 // ✅ LOGOUT
 export const logoutVendor = createAsyncThunk(
   "vendor/logoutVendor",
@@ -65,7 +62,7 @@ const vendorSlice = createSlice({
   extraReducers: (builder) => {
     builder
 
-      // REGISTER
+      // ── REGISTER ──────────────────────────────────────────────
       .addCase(registerVendor.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -81,7 +78,7 @@ const vendorSlice = createSlice({
         state.success = false;
       })
 
-      // LOGIN
+      // ── LOGIN ─────────────────────────────────────────────────
       .addCase(loginVendor.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -91,11 +88,9 @@ const vendorSlice = createSlice({
         state.loading = false;
         state.success = true;
 
-        // ✅ Save vendor (token inside it if backend sends)
-        state.vendor = {
-          ...action.payload.vendor,
-          token: action.payload.token,
-        };
+        state.vendor = action.payload.vendor;
+
+
       })
       .addCase(loginVendor.rejected, (state, action) => {
         state.loading = false;
@@ -103,21 +98,12 @@ const vendorSlice = createSlice({
         state.success = false;
       })
 
-
-      // ✅ LOGOUT
+      // ── LOGOUT ────────────────────────────────────────────────
       .addCase(logoutVendor.fulfilled, (state) => {
         state.vendor = null;
         state.success = false;
         state.error = null;
-
-        // ✅ remove token
-        localStorage.removeItem("vendorToken");
       });
-
-
-
-
-
   },
 });
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 // ✅ Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -17,29 +16,21 @@ const VendorLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ❌ token removed
-  const { loading, success, error } = useSelector(
-    (state) => state.vendor
-  );
+  const { loading, success, error } = useSelector((state) => state.vendor);
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false); // ✅ eye toggle
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ✅ Submit
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!form.email || !form.password) {
       toast.error("Please fill all fields");
       return;
     }
-
     dispatch(loginVendor(form));
   };
 
@@ -47,25 +38,24 @@ const VendorLogin = () => {
   useEffect(() => {
     if (success) {
       toast.success("Login Successful ✅");
-
-      navigate("/vendor/dashboard"); 
-
       dispatch(resetVendorState());
+      navigate("/vendor/dashboard");
     }
-
     if (error) {
       toast.error(error);
-
       dispatch(resetVendorState());
     }
-          console.log(error)
   }, [success, error, navigate, dispatch]);
 
   return (
     <>
-    
-
-      <ToastContainer position="top-center" autoClose={2000} />
+      {/* ✅ Toast fixed at top-center above everything */}
+      <ToastContainer
+        position="top-center"
+        autoClose={2000}
+        style={{ zIndex: 99999, top: "16px" }}
+        toastStyle={{ marginTop: "0px" }}
+      />
 
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
@@ -77,41 +67,60 @@ const VendorLogin = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
 
             {/* Email */}
-            <div className="flex items-center border rounded-lg px-3 py-2">
-              <Mail size={18} className="text-gray-400 mr-2" />
+            <div className="flex items-center border rounded-lg px-3 py-2 focus-within:border-blue-500 transition">
+              <Mail size={18} className="text-gray-400 mr-2 shrink-0" />
               <input
                 type="email"
                 name="email"
                 placeholder="Email"
                 value={form.email}
                 onChange={handleChange}
-                className="w-full outline-none"
+                className="w-full outline-none text-sm"
               />
             </div>
 
-            {/* Password */}
-            <div className="flex items-center border rounded-lg px-3 py-2">
-              <Lock size={18} className="text-gray-400 mr-2" />
+            {/* ✅ Password with Eye Toggle */}
+            <div className="flex items-center border rounded-lg px-3 py-2 focus-within:border-blue-500 transition">
+              <Lock size={18} className="text-gray-400 mr-2 shrink-0" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
                 value={form.password}
                 onChange={handleChange}
-                className="w-full outline-none"
+                className="w-full outline-none text-sm"
               />
+              {/* ✅ Eye Button */}
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none shrink-0"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
 
-            {/* Button */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3 rounded-lg text-white font-semibold ${
-                loading ? "bg-gray-400" : "bg-blue-600"
+              className={`w-full py-3 rounded-lg text-white font-semibold transition ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Logging in...
+                </span>
+              ) : (
+                "Login"
+              )}
             </button>
+
           </form>
         </div>
       </div>

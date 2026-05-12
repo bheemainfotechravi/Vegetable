@@ -12,7 +12,7 @@ const AddProductModal = ({ onClose, editData }) => {
 
   const [form, setForm] = useState({
     image: "",
-    name: "",
+    product_name: "", 
     mrp: "",
     discount: "",
     quantity: "",
@@ -28,7 +28,7 @@ const AddProductModal = ({ onClose, editData }) => {
     }
   }, [editData]);
 
-  // ✅ Cleanup preview URL (memory leak fix)
+  // ✅ Cleanup preview URL
   useEffect(() => {
     return () => {
       if (preview && typeof preview !== "string") {
@@ -47,7 +47,6 @@ const AddProductModal = ({ onClose, editData }) => {
     const file = e.target.files[0];
     if (file) {
       setForm({ ...form, image: file });
-
       const imageURL = URL.createObjectURL(file);
       setPreview(imageURL);
     }
@@ -61,8 +60,8 @@ const AddProductModal = ({ onClose, editData }) => {
 
   // ✅ Submit
   const handleSubmit = () => {
-    // 🔴 Validation
-    if (!form.name || !form.mrp || !form.quantity) {
+    // Validation
+    if (!form.product_name || !form.mrp || !form.quantity) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -74,12 +73,12 @@ const AddProductModal = ({ onClose, editData }) => {
 
     const formData = new FormData();
 
-    // ✅ Only send file if it's actually a file
+    // ✅ Only send file if it's actually a File object
     if (typeof form.image !== "string") {
       formData.append("image", form.image);
     }
 
-    formData.append("name", form.name);
+    formData.append("product_name", form.product_name); 
     formData.append("mrp", form.mrp);
     formData.append("discount", form.discount || 0);
     formData.append("quantity", form.quantity);
@@ -131,14 +130,21 @@ const AddProductModal = ({ onClose, editData }) => {
             </div>
           )}
 
+          {/* ✅ name → product_name */}
           <input
             type="text"
-            name="name"
+            name="product_name"
             placeholder="Product Name"
-            value={form.name}
+            value={form.product_name}
             onChange={handleChange}
             className="w-full p-2 border rounded-md text-sm"
           />
+
+
+
+
+
+          
 
           <input
             type="number"
@@ -158,7 +164,7 @@ const AddProductModal = ({ onClose, editData }) => {
             className="w-full p-2 border rounded-md text-sm"
           />
 
-          {/* Final Price */}
+          {/* Final Price - readonly */}
           <input
             value={`₹ ${finalPrice}`}
             readOnly
