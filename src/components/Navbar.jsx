@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search, ShoppingCart, X } from "lucide-react";
+import { Search, ShoppingCart, X, MapPin, ChevronDown } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { sendOtp, verifyOtp, resendOtp, logoutUser } from "../features/authSlice";
 import LoginModal from "./LoginModal";
@@ -7,7 +7,8 @@ import { Package, LogOut } from "lucide-react";
 import { CgProfile } from "react-icons/cg";
 import { IoWalletOutline } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+
+import { Salad, Apple, CircleDot, Cone, Sprout, Layers } from "lucide-react";
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -17,7 +18,6 @@ const Navbar = () => {
   const { step, loading, email, isAuthenticated, resendLoading, user } =
     useSelector((state) => state.auth);
 
-  // ✅ Live cart count from Redux
   const cartItems = useSelector((state) => state.cart.items);
   const cartCount = Object.values(cartItems).reduce((sum, qty) => sum + qty, 0);
 
@@ -35,9 +35,14 @@ const Navbar = () => {
   const isStep2Valid = otp.length === 6;
 
   const placeholders = [
-    "Tomato 🍅", "Potato 🥔", "Onion 🧅",
-    "Carrot 🥕", "Spinach 🌿", "Cabbage 🥬",
+    { label: "Tomato",  icon: <Salad     size={16} /> },
+    { label: "Potato",  icon: <Apple     size={16} /> },
+    { label: "Onion",   icon: <CircleDot size={16} /> },
+    { label: "Carrot",  icon: <Cone      size={16} /> },
+    { label: "Spinach", icon: <Sprout    size={16} /> },
+    { label: "Cabbage", icon: <Layers    size={16} /> },
   ];
+
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -88,11 +93,11 @@ const Navbar = () => {
     if (res.meta.requestStatus === "fulfilled") startTimer();
   };
 
-const handleLogout = async () => {
-  await dispatch(logoutUser());
-  setShowDropdown(false);
-  navigate("/"); 
-};
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    setShowDropdown(false);
+    navigate("/");
+  };
 
   useEffect(() => {
     if (!showModal) {
@@ -107,154 +112,166 @@ const handleLogout = async () => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
-  const firstName = user?.name ? user.name.trim().split(" ")[0] : "User";
-
   return (
     <>
-      <div className="w-full shadow-md border-b bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white sticky top-0 z-50">
+      {/* ═══════════════════════════════════════
+          NAVBAR
+      ═══════════════════════════════════════ */}
+      <nav className="w-full bg-white border-b border-green-100 shadow-sm sticky top-0 z-50">
 
-        {/* Main Navbar Row */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-5 h-[64px] sm:h-[72px] flex items-center justify-between gap-3">
+        {/* ── Main row ── */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-5 h-16 sm:h-[68px] flex items-center justify-between gap-4">
 
-          {/* Left: Logo + Location */}
-          <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
-            <h1 className="text-xl sm:text-2xl font-bold cursor-pointer">Logo</h1>
-            <span className="hidden sm:block text-xs opacity-85">{location}</span>
+          {/* ── LEFT: Logo + Location ── */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+
+            {/* Logo */}
+            <button
+              onClick={() => navigate("/")}
+              className="text-xl sm:text-2xl font-extrabold tracking-tight text-green-700 cursor-pointer"
+            >
+              Fresh<span className="text-orange-500">Mart</span>
+            </button>
+
+            {/* Location pill */}
+            <div className="hidden sm:flex items-center gap-1 text-xs text-gray-500 bg-green-50 border border-green-200 rounded-lg px-2.5 py-1.5 cursor-pointer hover:bg-green-100 transition-colors">
+              <MapPin size={11} className="text-green-500" />
+              <span>{location}</span>
+              <ChevronDown size={11} className="text-gray-400" />
+            </div>
           </div>
 
-          {/* Search — desktop only */}
-          <div className="flex-1 mx-3 hidden md:block max-w-xl">
-            <div className="flex items-center bg-white rounded-full px-4 py-2 shadow-md gap-2">
-              <Search className="text-gray-400 w-4 h-4 flex-shrink-0" />
+          {/* ── CENTER: Search (desktop) ── */}
+          <div className="flex-1 max-w-xl hidden md:block">
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus-within:border-green-400 focus-within:bg-green-50 transition-colors">
+              <Search size={15} className="text-gray-400 flex-shrink-0 focus-within:text-green-500" />
               <input
                 type="text"
-                placeholder={`Search for "${placeholders[index]}"`}
-                className="bg-transparent outline-none text-sm text-gray-700 w-full transition-all duration-300"
+                placeholder={`Search "${placeholders[index].label}"`}
+                className="bg-transparent outline-none text-sm text-gray-700 w-full placeholder-gray-400"
               />
             </div>
           </div>
 
-          {/* Right: Search icon (mobile) + Cart + Login/Avatar */}
-          <div className="flex items-center gap-3 sm:gap-5">
+          {/* ── RIGHT: Icons ── */}
+          <div className="flex items-center gap-2 flex-shrink-0">
 
-            {/* Mobile Search Toggle */}
+            {/* Mobile search toggle */}
             <button
-              className="md:hidden p-1"
+              className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors"
               onClick={() => setShowMobileSearch((v) => !v)}
               aria-label="Toggle search"
             >
-              {showMobileSearch
-                ? <X className="w-5 h-5" />
-                : <Search className="w-5 h-5" />}
+              {showMobileSearch ? <X size={18} /> : <Search size={18} />}
             </button>
 
-            {/* ✅ Cart — live count from Redux */}
-            <div
-              className="relative flex items-center gap-1.5 cursor-pointer"
+            {/* Cart button */}
+            <button
               onClick={() => navigate("/cart")}
+              className="relative flex items-center gap-2 bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-semibold px-3 sm:px-4 py-2 rounded-xl transition-all"
+              aria-label="Go to cart"
             >
-              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span className="hidden sm:block text-sm">Cart</span>
+              <ShoppingCart size={17} />
+              <span className="hidden sm:inline">Cart</span>
 
-              {/* Badge — only visible when cart has items */}
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-tight">
+                <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 border-2 border-white leading-none">
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
-            </div>
+            </button>
 
-            {/* Login OR Avatar */}
+            {/* Login / Avatar */}
             {!isAuthenticated ? (
               <button
                 onClick={() => setShowModal(true)}
-                className="bg-white text-purple-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow"
+                className="border border-green-500 text-green-700 hover:bg-green-50 font-semibold text-sm px-4 py-2 rounded-xl transition-colors"
               >
                 Login
               </button>
             ) : (
               <div className="relative" ref={dropdownRef}>
 
-                {/* Avatar circle with initials */}
+                {/* Avatar */}
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-purple-700 flex items-center justify-center font-bold text-sm sm:text-base cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/60"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-100 hover:bg-green-200 text-green-800 font-bold text-sm border border-green-200 flex items-center justify-center transition-colors"
                   aria-label="User menu"
                 >
                   {getInitials(user?.name)}
                 </button>
 
-                {/* Dropdown */}
+                {/* ── Dropdown ── */}
                 {showDropdown && (
-                  <div className="absolute right-0 mt-3 w-64 bg-white text-black rounded-2xl shadow-2xl overflow-hidden z-50 border border-gray-100">
+                  <div className="absolute right-0 mt-2.5 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden z-50">
 
-                    {/* User Info */}
-                    <div className="px-5 py-4 bg-gradient-to-r from-purple-100 to-pink-100 border-b">
-                      <p className="font-semibold text-base text-purple-800 truncate">
+                    {/* Header */}
+                    <div className="px-4 py-3.5 bg-gradient-to-br from-green-50 to-yellow-50 border-b border-green-100">
+                      <p className="text-sm font-bold text-green-800 truncate">
                         {user?.name || "User"}
                       </p>
-                      <p className="text-xs text-gray-500">Welcome back 👋</p>
+                      <p className="text-xs text-green-400 mt-0.5">Welcome back 👋</p>
                     </div>
 
-                    {/* Menu Items */}
-                    <div className="py-2">
+                    {/* Menu items */}
+                    <div className="py-1.5">
 
                       {/* My Profile */}
                       <button
-                        onClick={() => navigate("/profile")}
-                        className="flex items-center gap-3 w-full px-5 py-3 hover:bg-purple-50 transition text-base font-medium"
+                        onClick={() => { navigate("/profile"); setShowDropdown(false); }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-800 transition-colors"
                       >
-                        <CgProfile className="w-5 h-5 text-purple-600" />
+                        <span className="w-7 h-7 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center flex-shrink-0">
+                          <CgProfile size={15} />
+                        </span>
                         My Profile
                       </button>
 
                       {/* My Orders */}
-                      <button className="flex items-center gap-3 w-full px-5 py-3 hover:bg-purple-50 transition text-base font-medium">
-                        <Package className="w-5 h-5 text-blue-600" />
+                      <button className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-800 transition-colors">
+                        <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                          <Package size={14} />
+                        </span>
                         My Orders
                       </button>
 
-                      {/* ✅ My Cart — with live count badge */}
+                      {/* My Cart */}
                       <button
-                        onClick={() => navigate("/cart")}
-                        className="flex items-center gap-3 w-full px-5 py-3 hover:bg-purple-50 transition text-base font-medium"
+                        onClick={() => { navigate("/cart"); setShowDropdown(false); }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-800 transition-colors"
                       >
-                        <div className="relative">
-                          <ShoppingCart className="w-5 h-5 text-green-600" />
-                          {cartCount > 0 && (
-                            <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[9px] font-bold px-1 rounded-full leading-tight">
-                              {cartCount > 99 ? "99+" : cartCount}
-                            </span>
-                          )}
-                        </div>
+                        <span className="w-7 h-7 rounded-lg bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0">
+                          <ShoppingCart size={14} />
+                        </span>
                         My Cart
                         {cartCount > 0 && (
-                          <span className="ml-auto text-xs text-gray-400 font-normal">
+                          <span className="ml-auto text-[11px] font-semibold bg-green-50 text-green-600 border border-green-200 px-2 py-0.5 rounded-full">
                             {cartCount} item{cartCount !== 1 ? "s" : ""}
                           </span>
                         )}
                       </button>
 
                       {/* My Wallet */}
-                      <button className="flex items-center gap-3 w-full px-5 py-3 hover:bg-purple-50 transition text-base font-medium">
-                        <IoWalletOutline className="w-5 h-5 text-orange-600" />
+                      <button className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-800 transition-colors">
+                        <span className="w-7 h-7 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center flex-shrink-0">
+                          <IoWalletOutline size={15} />
+                        </span>
                         My Wallet
                       </button>
-
                     </div>
 
-                    {/* Divider */}
                     <div className="border-t border-gray-100" />
 
                     {/* Logout */}
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 w-full px-5 py-3 hover:bg-red-50 text-red-600 text-base font-semibold transition"
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
                     >
-                      <LogOut className="w-5 h-5" />
+                      <span className="w-7 h-7 rounded-lg bg-red-100 text-red-500 flex items-center justify-center flex-shrink-0">
+                        <LogOut size={14} />
+                      </span>
                       Logout
                     </button>
-
                   </div>
                 )}
               </div>
@@ -262,21 +279,21 @@ const handleLogout = async () => {
           </div>
         </div>
 
-        {/* Mobile Search Bar */}
+        {/* ── Mobile Search Bar ── */}
         {showMobileSearch && (
-          <div className="md:hidden px-4 pb-3">
-            <div className="flex items-center bg-white rounded-full px-4 py-2 shadow-md gap-2">
-              <Search className="text-gray-400 w-4 h-4 flex-shrink-0" />
+          <div className="md:hidden px-4 pb-3 border-t border-green-50">
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 mt-2 focus-within:border-green-400 focus-within:bg-green-50 transition-colors">
+              <Search size={15} className="text-gray-400 flex-shrink-0" />
               <input
                 type="text"
                 autoFocus
-                placeholder={`Search for "${placeholders[index]}"`}
-                className="bg-transparent outline-none text-sm text-gray-700 w-full"
+                placeholder={`Search "${placeholders[index].label}"`}
+                className="bg-transparent outline-none text-sm text-gray-700 w-full placeholder-gray-400"
               />
             </div>
           </div>
         )}
-      </div>
+      </nav>
 
       <LoginModal
         showModal={showModal}

@@ -12,12 +12,14 @@ const EditProductModal = ({ onClose, product }) => {
     mrp: "",
     discount: "",
     quantity: "",
+    unit: "kg",
     image: "",
   });
 
   const [preview, setPreview] = useState("");
   const [updating, setUpdating] = useState(false);
 
+  // Fill Edit Data
   useEffect(() => {
     if (product) {
       setForm({
@@ -25,12 +27,17 @@ const EditProductModal = ({ onClose, product }) => {
         mrp: product.mrp || "",
         discount: product.discount || "",
         quantity: product.quantity || "",
+        unit: product.unit || "kg",
         image: product.image || "",
       });
-      setPreview(product.image ? `${BASE_URL}${product.image}` : "");
+
+      setPreview(
+        product.image ? `${BASE_URL}${product.image}` : ""
+      );
     }
   }, [product]);
 
+  // Cleanup Preview
   useEffect(() => {
     return () => {
       if (preview && preview.startsWith("blob:")) {
@@ -39,50 +46,97 @@ const EditProductModal = ({ onClose, product }) => {
     };
   }, [preview]);
 
-  // ✅ Guard — don't render if no product
+  // No Product
   if (!product) return null;
 
+  // Handle Input
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
+  // Handle Image
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+
     if (file) {
-      setForm({ ...form, image: file });
+      setForm({
+        ...form,
+        image: file,
+      });
+
       setPreview(URL.createObjectURL(file));
     }
   };
 
+  // Final Price
   const finalPrice =
     form.mrp && form.discount
-      ? Math.round(form.mrp - (form.mrp * form.discount) / 100)
+      ? Math.round(
+          form.mrp -
+            (form.mrp * form.discount) / 100
+        )
       : form.mrp || 0;
 
+  // Update Product
   const handleUpdate = async () => {
-    if (!form.product_name || !form.mrp || !form.quantity) {
+
+    // Validation
+    if (
+      !form.product_name ||
+      !form.mrp ||
+      !form.quantity ||
+      !form.unit
+    ) {
       toast.error("Please fill all required fields");
       return;
     }
 
     const formData = new FormData();
 
-    if (form.image && typeof form.image !== "string") {
+    // Image
+    if (
+      form.image &&
+      typeof form.image !== "string"
+    ) {
       formData.append("image", form.image);
     }
 
-    formData.append("product_name", form.product_name);
-    formData.append("mrp", Number(form.mrp));
-    formData.append("discount", Number(form.discount) || 0);
-    formData.append("quantity", Number(form.quantity));
-    formData.append("final_price", Number(finalPrice));
+    // Fields
+    formData.append(
+      "product_name",
+      form.product_name
+    );
 
-    // ✅ Debug log — check what's being sent
-    for (let [key, val] of formData.entries()) {
-     
-    }
+    formData.append(
+      "mrp",
+      Number(form.mrp)
+    );
+
+    formData.append(
+      "discount",
+      Number(form.discount) || 0
+    );
+
+    formData.append(
+      "quantity",
+      Number(form.quantity)
+    );
+
+    formData.append(
+      "unit",
+      form.unit
+    );
+
+    formData.append(
+      "final_price",
+      Number(finalPrice)
+    );
 
     setUpdating(true);
+
     try {
       await dispatch(
         updateProduct({
@@ -91,16 +145,18 @@ const EditProductModal = ({ onClose, product }) => {
         })
       ).unwrap();
 
-      toast.success("✅ Product updated successfully!", {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      toast.success(
+        "Product updated successfully!"
+      );
+
       onClose();
+
     } catch (err) {
-      toast.error(`❌ ${err || "Update failed. Please try again."}`, {
-        position: "top-right",
-        autoClose: 3000,
-      });
+
+      toast.error(
+        err || "Update failed"
+      );
+
     } finally {
       setUpdating(false);
     }
@@ -108,8 +164,10 @@ const EditProductModal = ({ onClose, product }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center p-4 z-50">
+
       <div className="bg-white w-full max-w-md rounded-xl p-5 shadow-lg">
 
+        {/* Title */}
         <h2 className="text-lg font-semibold mb-4 text-gray-800">
           Edit Product
         </h2>
@@ -124,7 +182,7 @@ const EditProductModal = ({ onClose, product }) => {
             className="w-full p-2 border rounded-md text-sm"
           />
 
-          {/* Image Preview */}
+          {/* Preview */}
           {preview && (
             <div className="flex justify-center">
               <img
@@ -165,7 +223,7 @@ const EditProductModal = ({ onClose, product }) => {
             className="w-full p-2 border rounded-md text-sm"
           />
 
-          {/* Final Price readonly */}
+          {/* Final Price */}
           <input
             value={`₹ ${finalPrice}`}
             readOnly
@@ -182,10 +240,22 @@ const EditProductModal = ({ onClose, product }) => {
             className="w-full p-2 border rounded-md text-sm"
           />
 
+          {/* Unit */}
+          <select
+            name="unit"
+            value={form.unit}
+            onChange={handleChange}
+            className="w-full p-2 border rounded-md text-sm"
+          >
+            <option value="kg">KG</option>
+            <option value="gram">Gram</option>
+          </select>
+
         </div>
 
         {/* Buttons */}
         <div className="flex justify-end gap-2 mt-5">
+
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-200 rounded text-sm"
@@ -197,11 +267,16 @@ const EditProductModal = ({ onClose, product }) => {
             onClick={handleUpdate}
             disabled={updating}
             className={`px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 ${
-              updating ? "opacity-50 cursor-not-allowed" : ""
+              updating
+                ? "opacity-50 cursor-not-allowed"
+                : ""
             }`}
           >
-            {updating ? "Updating..." : "Update"}
+            {updating
+              ? "Updating..."
+              : "Update"}
           </button>
+
         </div>
 
       </div>

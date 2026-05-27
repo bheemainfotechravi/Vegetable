@@ -74,12 +74,13 @@ const initialState = {
   step: 1,
   email: "",
   role: null,
-  isAuthenticated: !!localStorage.getItem("token"),
+  isAuthenticated:false,
   user: null,
-  token: localStorage.getItem("token") || null,
+  token: null,
   error: null,
 };
 
+// ================= SLICE =================
 // ================= SLICE =================
 const authSlice = createSlice({
   name: "auth",
@@ -96,7 +97,6 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.error = null;
-      localStorage.removeItem("token");
     },
   },
 
@@ -108,16 +108,23 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
+
       .addCase(sendOtp.fulfilled, (state, action) => {
         state.loading = false;
         state.step = 2;
         state.email = action.meta.arg.email;
+
         state.role =
-          action.payload?.user?.role || action.meta.arg.role || "user";
+          action.payload?.user?.role ||
+          action.meta.arg.role ||
+          "user";
       })
+
       .addCase(sendOtp.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Failed to send OTP";
+        state.error =
+          action.payload?.message ||
+          "Failed to send OTP";
       })
 
       // ================= VERIFY OTP =================
@@ -125,42 +132,41 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
+
       .addCase(verifyOtp.fulfilled, (state, action) => {
         state.loading = false;
-        state.isAuthenticated = true;
 
-        // ✅ Handle all possible token locations from backend
+        // ✅ Get token from backend
         const token =
           action.payload?.token ||
           action.payload?.accessToken ||
-          action.payload?.user?.token ||
           null;
 
-        // ✅ Handle user
+        // ✅ Get user
         const user =
           action.payload?.user || {
             name: state.email.split("@")[0],
             email: state.email,
           };
 
-        // ✅ Remove token from user object if it exists there
-        if (user?.token) delete user.token;
-
+        // ✅ Auth state
+        state.isAuthenticated = true;
         state.user = user;
         state.token = token;
 
-        if (token) {
-          localStorage.setItem("token", token);
-          console.log("✅ Token saved:", token);
-        } else {
-          console.warn("⚠️ No token received from backend!");
-        }
-
         state.step = 1;
+
+        console.log("✅ Login Success");
+        console.log("User:", user);
+        console.log("Token:", token);
       })
+
       .addCase(verifyOtp.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "OTP verification failed";
+
+        state.error =
+          action.payload?.message ||
+          "OTP verification failed";
       })
 
       // ================= RESEND OTP =================
@@ -168,35 +174,39 @@ const authSlice = createSlice({
         state.resendLoading = true;
         state.error = null;
       })
+
       .addCase(resendOtp.fulfilled, (state) => {
         state.resendLoading = false;
       })
+
       .addCase(resendOtp.rejected, (state, action) => {
         state.resendLoading = false;
-        state.error = action.payload?.message || "Failed to resend OTP";
+
+        state.error =
+          action.payload?.message ||
+          "Failed to resend OTP";
       })
 
       // ================= LOGOUT =================
       .addCase(logoutUser.pending, (state) => {
         state.loading = true;
       })
+
       .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
+
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
-        state.loading = false;
-        // ✅ Clear both redux-persist keys (matching your axiosInstance getToken logic)
-        localStorage.removeItem("persist:auth");
-
+        state.error = null;
       })
+
       .addCase(logoutUser.rejected, (state) => {
-        // Still clear local state even if API call fails
+        state.loading = false;
+
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
-        state.loading = false;
-        localStorage.removeItem("persist:auth");
-
       });
   },
 });

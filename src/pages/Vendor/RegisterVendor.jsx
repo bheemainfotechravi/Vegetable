@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
+import Navbar from "../../components/Navbar";
 import { User, Mail } from "lucide-react";
 
 // ✅ Redux
 import { useDispatch, useSelector } from "react-redux";
-import { registerVendor, resetVendorState } from "../features/vendorSlice";
+import { registerVendor, resetVendorState } from "../../features/vendorSlice";
 
 // ✅ Toast
 import { toast } from "react-toastify";

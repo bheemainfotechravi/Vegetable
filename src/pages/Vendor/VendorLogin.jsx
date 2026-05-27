@@ -3,7 +3,7 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 // ✅ Redux
 import { useDispatch, useSelector } from "react-redux";
-import { loginVendor, resetVendorState } from "../features/vendorSlice";
+import { loginVendor, resetVendorState } from "../../features/vendorSlice";
 
 // ✅ Toast
 import { toast, ToastContainer } from "react-toastify";

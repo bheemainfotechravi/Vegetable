@@ -4,8 +4,8 @@ import AddProductModal from "./AddProductModal";
 import EditProductModal from "./EditProductModal";
 import { FaEdit, FaTrash, FaSearch } from "react-icons/fa";
 import { deleteProduct, getVendorProducts } from "../../features/productSlice";
-import { toast, ToastContainer } from "react-toastify";  
-import "react-toastify/dist/ReactToastify.css";          
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AddProduct = () => {
   const dispatch = useDispatch();
@@ -140,7 +140,9 @@ const AddProduct = () => {
                     <td className="p-3 text-right text-indigo-600 font-semibold">
                       ₹{item.final_price}
                     </td>
-                    <td className="p-3 text-center">{item.quantity}</td>
+                    <td className="p-3 text-center">
+                      {item.quantity} {item.unit}
+                    </td>
                     <td className="p-3 text-center">
                       <button onClick={() => handleEdit(item)} className="mr-2">
                         <FaEdit className="inline text-blue-500" />
@@ -179,7 +181,7 @@ const AddProduct = () => {
                       ₹{item.mrp} → ₹{item.final_price}
                     </p>
                     <p className="text-xs">
-                      Discount: {item.discount}% | Qty: {item.quantity}
+                      Discount: {item.discount}% | Qty: {item.quantity} {item.unit}
                     </p>
                   </div>
                 </div>
@@ -212,11 +214,10 @@ const AddProduct = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded text-sm ${
-                currentPage === i + 1
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 hover:bg-gray-300"
-              }`}
+              className={`px-3 py-1 rounded text-sm ${currentPage === i + 1
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
+                }`}
             >
               {i + 1}
             </button>

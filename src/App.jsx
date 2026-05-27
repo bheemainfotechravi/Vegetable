@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import Home from "./pages/Home";
-import RegisterVendor from "./pages/RegisterVendor";
-import VendorLogin from "./pages/VendorLogin";
+import RegisterVendor from "./pages/Vendor/RegisterVendor";
+import VendorLogin from "./pages/Vendor/VendorLogin";
 
 import VendorDashboard from "./pages/Vendor/VendorDashboard";
 import DashboardHome from "./pages/Vendor/DashboardHome";

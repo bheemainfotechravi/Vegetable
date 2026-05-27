@@ -1,8 +1,10 @@
+// store.js
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
-import authReducer from "../features/authSlice";
-import vendorReducer from "../features/vendorSlice";
-import productReducer from "../features/productSlice";
-import cartReducer from "../features/cartSlice";           // ✅ add this
+import authReducer      from "../features/authSlice";
+import vendorReducer    from "../features/vendorSlice";
+import productReducer   from "../features/productSlice";
+import cartReducer      from "../features/cartSlice";
+import cartItemsReducer from "../features/cartItemsSlice";
 
 import storage from "../api/storage";
 import { persistReducer, persistStore } from "redux-persist";
@@ -28,19 +30,27 @@ const productPersistConfig = {
   whitelist: ["products"],
 };
 
-// ✅ Guest cart persist
+// ✅ Cart persist
 const cartPersistConfig = {
   key: "cart",
   storage,
   whitelist: ["items", "totalQty", "totalPrice"],
 };
 
+// ✅ Cart Items persist
+const cartItemsPersistConfig = {
+  key: "cartItems",
+  storage,
+  whitelist: ["items", "cartItemIds", "totalQty", "totalPrice"],
+};
+
 // ✅ Combine reducers
 const rootReducer = combineReducers({
-  auth:    persistReducer(authPersistConfig, authReducer),
-  vendor:  persistReducer(vendorPersistConfig, vendorReducer),
-  product: persistReducer(productPersistConfig, productReducer),
-  cart:    persistReducer(cartPersistConfig, cartReducer),   // ✅ add this
+  auth:      persistReducer(authPersistConfig,      authReducer),
+  vendor:    persistReducer(vendorPersistConfig,    vendorReducer),
+  product:   persistReducer(productPersistConfig,   productReducer),
+  cart:      persistReducer(cartPersistConfig,      cartReducer),
+  cartItems: persistReducer(cartItemsPersistConfig, cartItemsReducer),
 });
 
 // ✅ Store
